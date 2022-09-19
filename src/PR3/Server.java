@@ -10,7 +10,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Server implements Runnable{
     private static Socket clientDialog;
-    private static ArrayList<String> arrayList=new ArrayList<>();
+    public static final ArrayList<String> arrayList=new ArrayList<>();
+
+
 
     public Server(Socket client) {
         Server.clientDialog = client;
@@ -35,12 +37,10 @@ public class Server implements Runnable{
                 }
 
 
-
-                System.out.println(arrayList.toString());
                 out.println(arrayList.toString());
 
+//                out.println(arrayList.toString());
                 out.flush();
-
 
             }
 

@@ -18,20 +18,20 @@ public class Client2 {
                     String clientCommand = br.readLine();
 
                     oos.writeUTF(clientCommand);
+
                     oos.flush();
 
                     if (clientCommand.equalsIgnoreCase("quit")) {
                         System.out.println("quit...");
                         break;
                     }
-                    Thread.sleep(2000);
 
-                    if (ois.read()>-1)
-                        System.out.println("Ответ сервера: ["+ois.readLine());
+                    System.out.println("Ответ сервера: "+ois.readLine());
+
                 }
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
