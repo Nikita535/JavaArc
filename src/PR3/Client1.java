@@ -8,7 +8,7 @@ public class Client1 {
         try (Socket socket = new Socket("localhost", 8080);
              BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
              DataOutputStream oos = new DataOutputStream(socket.getOutputStream());
-             DataInputStream ois = new DataInputStream(socket.getInputStream());) {
+             BufferedReader ois = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             System.out.println("Клиент подключился.");
 
@@ -26,8 +26,10 @@ public class Client1 {
                     }
                     Thread.sleep(2000);
 
-                    if (ois.read()>-1)
-                    System.out.println("Ответ на "+clientCommand+" - OK");
+                    if (ois.read()>-1) {
+                        System.out.println("Ответ сервера: ["+ois.readLine());
+                    }
+
                 }
             }
 
