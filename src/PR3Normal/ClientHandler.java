@@ -3,6 +3,7 @@ package PR3Normal;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -14,7 +15,7 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private Timer myTimer = new Timer();;
+    private final Timer myTimer = new Timer();
 
     public ClientHandler(Socket socket) {
         try {
@@ -22,7 +23,8 @@ public class ClientHandler implements Runnable {
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             clientHandlers.add(this);
-            broadCastMessage(clientMessages);
+//            broadCastMessage();
+            allMessages();
         } catch (IOException e) {
             closeEverything(socket,bufferedReader,bufferedWriter);
         }
@@ -30,22 +32,13 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String messageFromClient;
+
         while(socket.isConnected())
         {
             try{
                 messageFromClient=bufferedReader.readLine();
                 clientMessages.add(messageFromClient);
-
-
-
-                myTimer.schedule(new TimerTask() {
-                    public void run() {
-                        broadCastMessage(clientMessages);
-                    }
-                }, 0, 5000); // каждые 5 секунд
-
-
-//                broadCastMessage(clientMessages);
+                broadCastMessage(messageFromClient);
             } catch (IOException e) {
                 closeEverything(socket,bufferedReader,bufferedWriter);
                 break;
@@ -53,11 +46,19 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public void broadCastMessage(ArrayList<String> clientMessages) {
+
+    public void allMessages(){
+        myTimer.schedule(new TimerTask() {
+            public void run() {
+                broadCastMessage(clientMessages.toString());
+            }
+        }, 0, 15000);
+    }
+    public void broadCastMessage(String message) {
         for (ClientHandler clientHandler : clientHandlers) {
             try {
                 if (!clientMessages.isEmpty()) {
-                    clientHandler.bufferedWriter.write(clientMessages.toString());
+                    clientHandler.bufferedWriter.write(message);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
                 }
@@ -70,7 +71,7 @@ public class ClientHandler implements Runnable {
     public void removeClientHandler()
     {
         clientHandlers.remove(this);
-        broadCastMessage(clientMessages);
+//        broadCastMessage();
     }
 
     public void closeEverything(Socket socket,BufferedReader bufferedReader,BufferedWriter bufferedWriter)
