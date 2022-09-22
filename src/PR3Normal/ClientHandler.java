@@ -12,21 +12,22 @@ public class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
 
     public static ArrayList<String> clientMessages=new ArrayList<>();
+
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
+
     private final Timer myTimer = new Timer();
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket) throws IOException {
         try {
             this.socket = socket;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             clientHandlers.add(this);
-//            broadCastMessage();
-            allMessages();
+                allMessagesFor15Sec();
         } catch (IOException e) {
-            closeEverything(socket,bufferedReader,bufferedWriter);
+            closeAllFlow(socket,bufferedReader,bufferedWriter);
         }
     }
     @Override
@@ -38,23 +39,32 @@ public class ClientHandler implements Runnable {
             try{
                 messageFromClient=bufferedReader.readLine();
                 clientMessages.add(messageFromClient);
-                broadCastMessage(messageFromClient);
+                serverAnswer(messageFromClient);
             } catch (IOException e) {
-                closeEverything(socket,bufferedReader,bufferedWriter);
+                try {
+                    closeAllFlow(socket,bufferedReader,bufferedWriter);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
                 break;
             }
         }
     }
 
 
-    public void allMessages(){
+    public void allMessagesFor15Sec(){
         myTimer.schedule(new TimerTask() {
             public void run() {
-                broadCastMessage(clientMessages.toString());
+                try {
+                    serverAnswer(clientMessages.toString());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }, 0, 15000);
     }
-    public void broadCastMessage(String message) {
+    
+    public void serverAnswer(String message) throws IOException {
         for (ClientHandler clientHandler : clientHandlers) {
             try {
                 if (!clientMessages.isEmpty()) {
@@ -63,22 +73,15 @@ public class ClientHandler implements Runnable {
                     clientHandler.bufferedWriter.flush();
                 }
             } catch (IOException e) {
-                closeEverything(socket,bufferedReader,bufferedWriter);
+                closeAllFlow(socket,bufferedReader,bufferedWriter);
             }
         }
     }
 
-    public void removeClientHandler()
-    {
-        clientHandlers.remove(this);
-//        broadCastMessage();
-    }
 
-    public void closeEverything(Socket socket,BufferedReader bufferedReader,BufferedWriter bufferedWriter)
-    {
-        removeClientHandler();
-        try
-        {
+    public void closeAllFlow(Socket socket,BufferedReader bufferedReader,BufferedWriter bufferedWriter) throws IOException {
+        clientHandlers.remove(this);
+        
             if (bufferedReader!=null)
             {
                 bufferedReader.close();
@@ -91,8 +94,5 @@ public class ClientHandler implements Runnable {
             {
                 socket.close();
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        } 
     }
-}
